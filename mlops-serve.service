@@ -1,0 +1,14 @@
+[Unit]
+Description=MLOps Model Inference Server
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu
+Environment="CLOUD_BUCKET=mlops-lab-data-215192669"
+ExecStart=/usr/bin/python3 /home/ubuntu/src/serve.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
