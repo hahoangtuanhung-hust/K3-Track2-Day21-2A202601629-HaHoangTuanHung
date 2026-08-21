@@ -3,10 +3,6 @@ name: MLOps Pipeline
 on:
   push:
     branches: [main]
-    paths:
-      - 'data/**.dvc'
-      - 'src/**.py'
-      - 'params.yaml'
   workflow_dispatch:
 
 jobs:
@@ -104,8 +100,14 @@ jobs:
             aws_secret_access_key = $AWS_SECRET_ACCESS_KEY
             EOF
             sudo systemctl restart mlops-serve
-            for i in {1..30}; do
-              curl -f http://localhost:8000/health && exit 0
+            for i in $(seq 1 30); do
+              if curl -s -f http://localhost:8000/health > /dev/null; then
+                echo "MLOps serve is UP and healthy!"
+                exit 0
+              fi
+              echo "Waiting for service to become healthy... ($i/30)"
               sleep 2
             done
+            echo "Service failed to start within timeout"
+            sudo journalctl -u mlops-serve --no-pager -n 30
             exit 1
