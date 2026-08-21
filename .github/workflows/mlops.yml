@@ -88,11 +88,21 @@ jobs:
     steps:
       - name: SSH deploy to VM
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ fromJSON(secrets.CLOUD_CREDENTIALS).aws_access_key_id }}
+          AWS_SECRET_ACCESS_KEY: ${{ fromJSON(secrets.CLOUD_CREDENTIALS).aws_secret_access_key }}
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
+          envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY
           script: |
+            mkdir -p ~/.aws
+            cat > ~/.aws/credentials <<EOF
+            [default]
+            aws_access_key_id = $AWS_ACCESS_KEY_ID
+            aws_secret_access_key = $AWS_SECRET_ACCESS_KEY
+            EOF
             sudo systemctl restart mlops-serve
             sleep 5
             curl -f http://localhost:8000/health || exit 1
